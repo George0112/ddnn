@@ -1,0 +1,4 @@
+*.yaml
+generate_yaml.py
+*.sh
+__pycache__
