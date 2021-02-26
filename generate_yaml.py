@@ -4,16 +4,18 @@ from template.app_yaml import *
 
 parser = argparse.ArgumentParser()
 
-parser.add_argument("--model", type=str)
+model_choices = ['vgg16', 'multitask']
+
+parser.add_argument("--model", type=str, required="True", choices=model_choices)
 parser.add_argument("--cut-point", nargs="+", default=[0, -1])
-parser.add_argument("--num-output", type=int, default=1)
 parser.add_argument("--output-layer", nargs="+", default=[-1], type=int)
+parser.add_argument("--input-size", type=int, default=224)
 
 args = parser.parse_args()
 
 max_layer = 200
 
-if(int(sys.argv[len(sys.argv)-1]) > max_layer):
+if(int(args.cut_point[-1]) > max_layer):
   print("max layer = %s" %(max_layer))
   sys.exit()
 
@@ -28,15 +30,15 @@ def write():
     f.write(svc_yaml %(app, app, app))
 
   with open("./yaml/%s.yaml" %(app), "a") as f:
-    f.write(app_yaml %(app, app, app, app, m, m, m, c, n, flag))
+    f.write(app_yaml %(app, app, app, app, m, m, c, n, flag))
 
 write()
 flag = ''
 
 for idx, i in enumerate(args.cut_point):
-  c = args.cut_point[idx] # The current cut point
+  c = int(args.cut_point[idx])+1 # The current cut point
   if(idx == len(args.cut_point)-2):
-    app = m + '-' + c
+    app = m + '-' + str(c)
     if(args.output_layer[0] != -1):
       n = args.cut_point[idx+1] + '", "' + '", "'.join(str(o) for o in args.output_layer) # Multiple outputs
     else:
@@ -48,8 +50,8 @@ for idx, i in enumerate(args.cut_point):
     print(args.output_layer)
     flag = '"--is-last"'
     if(args.output_layer[0] == -1):
-      app=m +'-'+ args.cut_point[-1]
-      n = -1 # ' '.join(str(o) for o in args.output_layer)
+      app=m +'-'+ str(int(args.cut_point[-1])+1)
+      n = -1 # Only 1 output
       write()
     else:
       for o in args.output_layer:
@@ -66,4 +68,4 @@ for idx, i in enumerate(args.cut_point):
   flag = ""
 
 with open("./yaml/%s-client.yaml" %(m), "w") as f:
-  f.write(client_yaml %(m, m, m, m, m, m))
+  f.write(client_yaml %(m, m, m, m, m, m, args.input_size))

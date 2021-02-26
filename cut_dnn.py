@@ -20,10 +20,10 @@ def get_output_of_layer(layer, starting_layer_name, new_input, output_layer=-1):
         return layer_outputs[layer.name]
 
     # if this is the starting layer, then apply it on the input tensor
-    # if layer.name == starting_layer_name:
-    print(layer._inbound_nodes[0].inbound_layers)
-    if starting_layer_name == layer._inbound_nodes[0].inbound_layers.name:
-        layer._inbound_nodes.pop()
+    if layer.name == starting_layer_name:
+    # print(layer._inbound_nodes[0].inbound_layers)
+    # if starting_layer_name == layer._inbound_nodes[0].inbound_layers.name:
+        # layer._inbound_nodes.pop()
         out = layer(new_input)
         layer_outputs[layer.name] = out
         return out
@@ -50,9 +50,10 @@ def cut_model_functional(model, cut_point, output_layer=-1):
     global layer_outputs
     try:
         starting_layer_name = model.layers[cut_point].name
+        print(starting_layer_name)
         # create a new input layer  for our sub-model we want to construct
         layer_input_shape = model.get_layer(starting_layer_name).get_input_shape_at(0)
-        # new_input = layers.Input(batch_shape=layer_input_shape)
+        new_input = layers.Input(batch_shape=layer_input_shape)
         if isinstance(layer_input_shape, list):
             layer_input = [layers.Input(shape=layer_input_shape[0][1:]) for x in range(len(layer_input_shape))]
         else:
@@ -74,7 +75,7 @@ def cut_model_functional(model, cut_point, output_layer=-1):
         for layer in model.layers:
             if len(layer._inbound_nodes) > 1:
                 layer._inbound_nodes.pop()
-        raise Exception('dfdjf')
+        raise Exception('Multiple inbound nodes')
         return None, None
 
     for layer in model.layers:

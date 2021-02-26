@@ -6,6 +6,9 @@ from app import route
 if __name__ == "__main__":
 
     parser = argparse.ArgumentParser()
+
+    # model_choices = ['vgg16', 'multitask']
+
     parser.add_argument('model', type=str)
     parser.add_argument('cut_point', type=int)
     parser.add_argument('next_cut_point', nargs='+', type=int)

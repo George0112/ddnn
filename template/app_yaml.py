@@ -18,14 +18,14 @@ spec:
         app: %s
     spec:
       containers:
-      - image: chaowen/%s
+      - image: chaowen/ddnn
         imagePullPolicy: Always
         name: %s
         resources:
           requests:
-            cpu: "2000m"
+            cpu: "1000m"
           limits:
-            cpu: "4000m"
+            cpu: "2000m"
         env:
           - name: "PYTHONUNBUFFERED"
             value: "1"
@@ -38,8 +38,7 @@ spec:
       dnsPolicy: ClusterFirst
       restartPolicy: Always
       schedulerName: default-scheduler
-
----
+      serviceAccount: ddnn-admin
 """
 
 client_yaml = """apiVersion: apps/v1
@@ -68,16 +67,16 @@ spec:
         name: %s
         resources:
           requests:
-            cpu: "2000m"
+            cpu: "500m"
           limits:
-            cpu: "4000m"
+            cpu: "1000m"
         env:
           - name: "PYTHONUNBUFFERED"
             value: "1"
           - name: "PYTHONIOENCODING"
             value: "UTF-8"
         command: ["python3"]
-        args: ["run.py", "%s"]
+        args: ["run.py", "%s", "%s"]
         terminationMessagePath: /dev/termination-log
         terminationMessagePolicy: File
       dnsPolicy: ClusterFirst
@@ -102,6 +101,4 @@ spec:
     app: %s
   sessionAffinity: None
   type: ClusterIP
-
----
 """

@@ -7,6 +7,7 @@ import logging
 from app.my_model import my_model
 from tensorflow.keras.preprocessing.image import load_img
 from tensorflow.keras.preprocessing.image import img_to_array
+from flask import jsonify
 
 from app import app
 
@@ -23,17 +24,10 @@ def init(model_name, cut_point, next_cut_point, is_first=False, is_last=False, o
         input = np.array(input)
         output = model.predict(input).tolist()
 
-        # Testing
-        # image = load_img('./cat.jpg', target_size=(32,32))
-        # image = img_to_array(image)
-        # image = np.array([image for x in range(1)]).tolist()
-        # output = model.predict(image)#.tolist()
-        # print(output)
-
         if not is_last:
             if len(next_cut_point) == 1:
                 try:
-                    res = requests.post('http://'+model_name+'-'+str(next_cut_point[0])+'.default.svc.cluster.local:5000', data = {'data': json.dumps(output)}).text
+                    res = requests.post('http://'+model_name+'-'+str(next_cut_point[0]+1)+'.default.svc.cluster.local:5000', data = {'data': json.dumps(output)}).text
                 except Exception as e:
                     print(e)
                     res = 'Network error'
@@ -54,3 +48,40 @@ def init(model_name, cut_point, next_cut_point, is_first=False, is_last=False, o
             index = np.argmax(output)
             print(index)
             return str(np.argmax(output))
+
+    @app.route('/info', methods=['GET'])
+    def info():
+        res = []
+        res.append(model.get_layers())
+        if not is_last:
+            if len(next_cut_point) == 1:
+                try:
+                    for l in json.loads(requests.get('http://'+model_name+'-'+str(next_cut_point[0]+1)+'.default.svc.cluster.local:5000/info').text):
+                        res.append(l)
+                    print(res)
+                except Exception as e:
+                    print(e)
+            else:
+                for n in next_cut_point[1:]:
+                    print(n)
+                    try:
+                        for l in json.loads(requests.get('http://'+model_name+'-'+str(next_cut_point[0]+1)+'.default.svc.cluster.local:5000/info').text):
+                            res.append(l)
+                        print(res)
+                    except Exception as e:
+                        print(e)
+                        continue
+            return jsonify(res)
+        else:
+            return jsonify([model.get_layers()])
+
+    @app.route('/name', methods=['GET'])
+    def name():
+        return model_name
+
+    @app.route('/cuttable', methods=['GET'])
+    def cuttable():
+        if not is_first:
+            return None
+        else:
+            return jsonify(model.get_cuttable())

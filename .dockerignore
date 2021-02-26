@@ -2,3 +2,7 @@
 generate_yaml.py
 *.sh
 __pycache__
+yaml
+template
+Dockerfile
+client.py
