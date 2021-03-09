@@ -6,7 +6,7 @@ from tensorflow.keras.preprocessing.image import load_img
 from tensorflow.keras.preprocessing.image import img_to_array
 import os
 
-multitask = models.Sequential()
+# multitask = models.Sequential()
 
 input_layer = layers.Input(shape=(32, 32, 3))
 block1_conv1 = layers.Conv2D(3, (3, 3), activation='relu', padding='SAME')(input_layer)
@@ -22,19 +22,20 @@ block4_conv1 = layers.Conv2D(128, (3, 3), activation='relu', padding='SAME')(blo
 block4_conv2 = layers.Conv2D(128, (3, 3), activation='relu', padding='SAME')(block4_conv1)
 block4_conv3 = layers.Conv2D(128, (3, 3), activation='relu', padding='SAME')(block4_conv2)
 block4_pool = layers.MaxPooling2D((2, 2))(block4_conv3)
+flatten = layers.Flatten()(block4_pool)
 
 # Smile branch
-smile_fc1 = layers.Dense(256, activation='relu')(block4_pool)
+smile_fc1 = layers.Dense(256, activation='relu')(flatten)
 smile_fc2 = layers.Dense(256, activation='relu')(smile_fc1)
 smile_output = layers.Dense(2, activation='softmax')(smile_fc2)
 
 # Gender branch
-gender_fc1 = layers.Dense(256, activation='relu')(block4_pool)
+gender_fc1 = layers.Dense(256, activation='relu')(flatten)
 gender_fc2 = layers.Dense(256, activation='relu')(gender_fc1)
 gender_output = layers.Dense(2, activation='softmax')(gender_fc2)
 
 # Age branch
-age_fc1 = layers.Dense(256, activation='relu')(block4_pool)
+age_fc1 = layers.Dense(256, activation='relu')(flatten)
 age_fc2 = layers.Dense(256, activation='relu')(age_fc1)
 age_output = layers.Dense(5, activation='softmax')(age_fc2)
 

@@ -4,7 +4,6 @@ from flask import jsonify
 class my_model():
     def __init__(self, model_name, cut_point, next_cut_point, is_first=False, is_last=False):
         print(model_name, cut_point, next_cut_point, (is_first), is_last)
-        # model = VGG16(weights="imagenet")
 
         self.cuttable = []
 
@@ -21,7 +20,7 @@ class my_model():
             self.model, _ = cut_model_functional(model, next_cut_point[0])
             self.model.summary()
         elif is_last:
-            _, self.model = cut_model_functional(model, cut_point)
+            _, self.model = cut_model_functional(model, cut_point, output_layer=next_cut_point[0])
             self.model.summary()
         else:
             model1, _ = cut_model_functional(model, next_cut_point[0])

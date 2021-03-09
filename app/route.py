@@ -46,7 +46,6 @@ def init(model_name, cut_point, next_cut_point, is_first=False, is_last=False, o
                 return '\n'.join(str(r) for r in res)
         else:
             index = np.argmax(output)
-            print(index)
             return str(np.argmax(output))
 
     @app.route('/info', methods=['GET'])
@@ -65,7 +64,7 @@ def init(model_name, cut_point, next_cut_point, is_first=False, is_last=False, o
                 for n in next_cut_point[1:]:
                     print(n)
                     try:
-                        for l in json.loads(requests.get('http://'+model_name+'-'+str(next_cut_point[0]+1)+'.default.svc.cluster.local:5000/info').text):
+                        for l in json.loads(requests.get('http://'+model_name+'-'+str(n)+'.default.svc.cluster.local:5000/info').text):
                             res.append(l)
                         print(res)
                     except Exception as e:
