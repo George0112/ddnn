@@ -76,7 +76,6 @@ def cut_model_functional(model, cut_point, output_layer=-1):
             if len(layer._inbound_nodes) > 1:
                 layer._inbound_nodes.pop()
         raise Exception('Multiple inbound nodes')
-        return None, None
 
     for layer in model.layers:
         if len(layer._inbound_nodes) > 1:

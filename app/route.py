@@ -5,29 +5,54 @@ from flask import request
 import ast
 import logging
 from app.my_model import my_model
-from tensorflow.keras.preprocessing.image import load_img
-from tensorflow.keras.preprocessing.image import img_to_array
+# from tensorflow.keras.preprocessing.image import load_img
+# from tensorflow.keras.preprocessing.image import img_to_array
 from flask import jsonify
+import time
+import io
+import zlib
 
 from app import app
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 
+def compress_nparr(nparr):
+    """
+    Returns the given numpy array as compressed bytestring,
+    the uncompressed and the compressed byte size.
+    """
+    bytestream = io.BytesIO()
+    np.save(bytestream, nparr)
+    uncompressed = bytestream.getvalue()
+    compressed = zlib.compress(uncompressed)
+    print("compress from %f to %f" %(len(uncompressed), len(compressed)))
+    return compressed
+
+def uncompress_nparr(bytestring):
+    """
+    """
+    return np.load(io.BytesIO(zlib.decompress(bytestring)))
+
 def init(model_name, cut_point, next_cut_point, is_first=False, is_last=False, output_layer=-1, num_output=1):
     model = my_model(model_name, cut_point=cut_point, next_cut_point=next_cut_point, is_first=is_first, is_last=is_last)
     
     @app.route('/', methods=['POST', 'GET'])
     def post():
-        input = request.form['data']
-        input = ast.literal_eval(input)
-        input = np.array(input)
-        output = model.predict(input).tolist()
+        start = time.time()
+        input = request.get_data()
+        input = uncompress_nparr(input)
+        # print("Request from form time usage: %f" %(time.time()-start))
+        # input = ast.literal_eval(input)
+        # print("literal_eval time usage: %f" %(time.time()-start))
+        # input = np.array(input)
+        print("Data retrieve time usage: %f" %(time.time()-start))
+        output = model.predict(input)
 
         if not is_last:
             if len(next_cut_point) == 1:
                 try:
-                    res = requests.post('http://'+model_name+'-'+str(next_cut_point[0]+1)+'.default.svc.cluster.local:5000', data = {'data': json.dumps(output)}).text
+                    res = requests.post('http://'+model_name+'-'+str(next_cut_point[0]+1)+'.default.svc.cluster.local:5000', data=compress_nparr(output)).text
                 except Exception as e:
                     print(e)
                     res = 'Network error'
@@ -37,7 +62,7 @@ def init(model_name, cut_point, next_cut_point, is_first=False, is_last=False, o
                 for n in next_cut_point[1:]:
                     print(n)
                     try:
-                        res.append(requests.post('http://'+model_name+'-'+str(n)+'.default.svc.cluster.local:5000', data = {'data': json.dumps(output)}).text)
+                        res.append(requests.post('http://'+model_name+'-'+str(n)+'.default.svc.cluster.local:5000', data=compress_nparr(output)).text)
                         print(res)
                     except Exception as e:
                         print(e)
@@ -50,14 +75,13 @@ def init(model_name, cut_point, next_cut_point, is_first=False, is_last=False, o
 
     @app.route('/info', methods=['GET'])
     def info():
-        res = []
-        res.append(model.get_layers())
         if not is_last:
+            res = []
+            res.append(model.get_layers())
             if len(next_cut_point) == 1:
                 try:
                     for l in json.loads(requests.get('http://'+model_name+'-'+str(next_cut_point[0]+1)+'.default.svc.cluster.local:5000/info').text):
                         res.append(l)
-                    print(res)
                 except Exception as e:
                     print(e)
             else:
@@ -66,7 +90,6 @@ def init(model_name, cut_point, next_cut_point, is_first=False, is_last=False, o
                     try:
                         for l in json.loads(requests.get('http://'+model_name+'-'+str(n)+'.default.svc.cluster.local:5000/info').text):
                             res.append(l)
-                        print(res)
                     except Exception as e:
                         print(e)
                         continue
@@ -84,3 +107,27 @@ def init(model_name, cut_point, next_cut_point, is_first=False, is_last=False, o
             return None
         else:
             return jsonify(model.get_cuttable())
+
+    @app.route('/time', methods=['GET'])
+    def get_avg_time():
+        if not is_last:
+            res = []
+            res.append(model.get_avg_time())
+            if len(next_cut_point) == 1:
+                try:
+                    for l in json.loads(requests.get('http://'+model_name+'-'+str(next_cut_point[0]+1)+'.default.svc.cluster.local:5000/time').text):
+                        res.append(l)
+                except Exception as e:
+                    print(e)
+            else:
+                for n in next_cut_point[1:]:
+                    print(n)
+                    try:
+                        for l in json.loads(requests.get('http://'+model_name+'-'+str(n)+'.default.svc.cluster.local:5000/time').text):
+                            res.append(l)
+                    except Exception as e:
+                        print(e)
+                        continue
+            return jsonify(res)
+        else:
+            return jsonify([model.get_avg_time()])

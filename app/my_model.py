@@ -1,14 +1,23 @@
 from cut_dnn import cut_model_functional
+import tensorflow as tf
 from flask import jsonify
+from tensorflow import keras
+import gc
+import time
 
 class my_model():
     def __init__(self, model_name, cut_point, next_cut_point, is_first=False, is_last=False):
         print(model_name, cut_point, next_cut_point, (is_first), is_last)
 
         self.cuttable = []
+        self.avg_time = (0, 0)
 
         model = self.pick_model(model_name)
         model.summary()
+
+        if cut_point == 0 and next_cut_point[0] == 0:
+            self.model = model
+            return
         
         for idx, layer in enumerate(model.layers[:-1]):
             if len(layer._inbound_nodes) > 1:
@@ -17,7 +26,12 @@ class my_model():
                 self.cuttable.append({"index": idx, "name": layer.name})
 
         if is_first:
-            self.model, _ = cut_model_functional(model, next_cut_point[0])
+            model, _ = cut_model_functional(model, next_cut_point[0])
+            model.save('./model')
+            tf.keras.backend.clear_session()
+            del model
+            gc.collect()
+            self.model = keras.models.load_model('./model')
             self.model.summary()
         elif is_last:
             _, self.model = cut_model_functional(model, cut_point, output_layer=next_cut_point[0])
@@ -29,7 +43,11 @@ class my_model():
         pass
 
     def predict(self, input):
+        start = time.time()
         output = self.model.predict(input)
+        t = time.time() - start
+        print("predict time usage: %f" %(t))
+        self.avg_time = ((self.avg_time[0]*self.avg_time[1] + t)/(self.avg_time[1]+1), self.avg_time[1]+1)
         return output
 
     def pick_model(self, model_name):
@@ -53,3 +71,6 @@ class my_model():
 
     def get_cuttable(self):
         return self.cuttable
+
+    def get_avg_time(self):
+        return self.avg_time[0]
