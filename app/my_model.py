@@ -4,6 +4,8 @@ from flask import jsonify
 from tensorflow import keras
 import gc
 import time
+import threading
+import psutil
 
 class my_model():
     def __init__(self, model_name, cut_point, next_cut_point, is_first=False, is_last=False):
@@ -11,6 +13,9 @@ class my_model():
 
         self.cuttable = []
         self.avg_time = (0, 0)
+        self.cpu = []
+        self.times = []
+        self.memory = []
 
         model = self.pick_model(model_name)
         model.summary()
@@ -42,18 +47,46 @@ class my_model():
             self.model.summary()
         pass
 
+    def record(self):
+        global running
+        running = True
+        currentProcess = psutil.Process()
+        # start loop
+        while running:
+            self.memory.append(currentProcess.memory_info().rss)
+            self.cpu.append(currentProcess.cpu_percent(interval=0.01))
+
+    def start(self):
+        global t
+        # create thread and start it
+        t = threading.Thread(target=self.record)
+        t.start()
+
+    def stop(self):
+        global running
+        global t
+        # use `running` to stop loop in thread so thread will end
+        running = False
+        # wait for thread's end
+        t.join()
+
     def predict(self, input):
-        start = time.time()
-        output = self.model.predict(input)
-        t = time.time() - start
-        print("predict time usage: %f" %(t))
-        self.avg_time = ((self.avg_time[0]*self.avg_time[1] + t)/(self.avg_time[1]+1), self.avg_time[1]+1)
-        return output
+        self.start()
+        try:
+            start = time.time()
+            output = self.model.predict(input)
+            t = time.time() - start
+            self.times.append(t)
+            print("predict time usage: %f" %(t))
+            self.avg_time = ((self.avg_time[0]*self.avg_time[1] + t)/(self.avg_time[1]+1), self.avg_time[1]+1)
+            return output
+        finally:
+            self.stop()
 
     def pick_model(self, model_name):
         if 'vgg16' in model_name:
             from tensorflow.keras.applications import VGG16
-            return VGG16(weights="imagenet")
+            return VGG16(weights="./weights/vgg16.h5")
         elif 'multitask' in model_name:
             from models.multitask import multitask
             return multitask
@@ -74,3 +107,12 @@ class my_model():
 
     def get_avg_time(self):
         return self.avg_time[0]
+
+    def get_time(self):
+        return self.times
+
+    def get_cpu(self):
+        return self.cpu
+
+    def get_memory(self):
+        return self.memory

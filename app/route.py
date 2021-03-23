@@ -131,3 +131,27 @@ def init(model_name, cut_point, next_cut_point, is_first=False, is_last=False, o
             return jsonify(res)
         else:
             return jsonify([model.get_avg_time()])
+
+    @app.route('/metrics', methods=['GET'])
+    def get_metric():
+        if not is_last:
+            res = []
+            res.append({"time": model.get_time(), "cpu": model.get_cpu(), "memory": model.get_memory()})
+            if len(next_cut_point) == 1:
+                try:
+                    for l in json.loads(requests.get('http://'+model_name+'-'+str(next_cut_point[0]+1)+'.default.svc.cluster.local:5000/metrics').text):
+                        res.append(l)
+                except Exception as e:
+                    print(e)
+            else:
+                for n in next_cut_point[1:]:
+                    print(n)
+                    try:
+                        for l in json.loads(requests.get('http://'+model_name+'-'+str(n)+'.default.svc.cluster.local:5000/metrics').text):
+                            res.append(l)
+                    except Exception as e:
+                        print(e)
+                        continue
+            return jsonify(res)
+        else:
+            return jsonify([{"time": model.get_time(), "cpu": model.get_cpu(), "memory": model.get_memory()}])
