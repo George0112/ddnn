@@ -4,5 +4,5 @@ generate_yaml.py
 __pycache__
 yaml
 template
-Dockerfile
+Dockerfile*
 client.py
