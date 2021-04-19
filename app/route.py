@@ -84,6 +84,7 @@ def init(model_name, cut_point, next_cut_point, is_first=False, is_last=False, o
                         res.append(l)
                 except Exception as e:
                     print(e)
+                    return 'model not ready', 500
             else:
                 for n in next_cut_point[1:]:
                     print(n)
@@ -131,6 +132,19 @@ def init(model_name, cut_point, next_cut_point, is_first=False, is_last=False, o
             return jsonify(res)
         else:
             return jsonify([model.get_avg_time()])
+
+    @app.route('/layer', methods=['POST'])
+    def change_layer():
+        cut_point = int(request.form['cut_point'])
+        next_cut_point = [int(n) for n in request.form['next_cut_point'].split(',')]
+        # try:
+        model = my_model(model_name, cut_point=cut_point, next_cut_point=next_cut_point, is_first=is_first, is_last=is_last)
+        # except Exception as e:
+            # print(e)
+        
+        return jsonify({'cut_point': cut_point, 'next_cut_point': next_cut_point})
+
+
 
     @app.route('/metrics', methods=['GET'])
     def get_metric():

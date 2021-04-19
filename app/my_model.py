@@ -16,6 +16,7 @@ class my_model():
         self.cpu = []
         self.times = []
         self.memory = []
+        tf.keras.backend.clear_session()
 
         model = self.pick_model(model_name)
         model.summary()

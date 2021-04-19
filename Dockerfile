@@ -1,6 +1,6 @@
 #FROM python:3.7.10-slim
 
-FROM tensorflow/tensorflow:2.1.0
+FROM chaowen/tensorflow:2.1.0
 
 WORKDIR /dnn
 

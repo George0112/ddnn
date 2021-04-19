@@ -72,6 +72,7 @@ def cut_model_functional(model, cut_point, output_layer=-1):
         modelB = Model(inputs=new_input, outputs=new_output)
 
     except Exception as e:
+        print(e)
         for layer in model.layers:
             if len(layer._inbound_nodes) > 1:
                 layer._inbound_nodes.pop()

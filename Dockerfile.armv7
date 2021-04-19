@@ -4,14 +4,10 @@ WORKDIR /dnn
 
 COPY requirement.txt /dnn/
 
-#RUN pip install https://dl.google.com/coral/python/tflite_runtime-2.1.0.post1-cp37-cp37m-linux_aarch64.whl
-
-RUN apt-get update && apt-get install gcc python3-dev -y && rm -rf /var/lib/apt/lists/*
+RUN apt-get update && apt-get install -y python3-pip python3-setuptools python3-psutil python3-bottle python3-requests
 
 RUN pip3 install -r requirement.txt
 
 COPY . ./
 
-#RUN cp /usr/bin/python3 /usr/bin/python
-
-CMD ["python", "run.py", "vgg16", "0", "0", "--is-last"]
+CMD ["python", "run.py", "vgg16", "0", "0" "--is-last"]
