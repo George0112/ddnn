@@ -2,6 +2,7 @@ import sys
 import argparse
 from app import app
 from app import route
+from waitress import serve
 
 if __name__ == "__main__":
 
@@ -22,4 +23,4 @@ if __name__ == "__main__":
     print(args.next_cut_point)
     
     route.init(model_name=args.model, cut_point=args.cut_point, next_cut_point=args.next_cut_point, is_first=args.is_first, is_last=args.is_last)
-    app.run(host='0.0.0.0', port=5000, debug=True)
+    serve(app, host='0.0.0.0', port=5000)
