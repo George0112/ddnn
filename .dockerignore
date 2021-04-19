@@ -6,3 +6,4 @@ yaml
 template
 Dockerfile*
 client.py
+model/
