@@ -8,4 +8,4 @@ RUN pip3 install -r requirement.txt
 
 COPY . ./
 
-CMD ["python", "run.py", "vgg16", "0", "0" "--is-last"]
+CMD ["python", "run.py", "vgg16", "0", "0", "--is-last"]
