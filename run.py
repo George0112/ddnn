@@ -23,4 +23,4 @@ if __name__ == "__main__":
     print(args.next_cut_point)
     
     route.init(model_name=args.model, cut_point=args.cut_point, next_cut_point=args.next_cut_point, is_first=args.is_first, is_last=args.is_last)
-    serve(app, host='0.0.0.0', port=5000)
+    serve(app, host='0.0.0.0', port=5000, threads=24)

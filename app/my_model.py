@@ -9,7 +9,7 @@ import psutil
 
 class my_model():
     def __init__(self, model_name, cut_point, next_cut_point, is_first=False, is_last=False):
-        print(model_name, cut_point, next_cut_point, (is_first), is_last)
+        print(model_name, cut_point, next_cut_point, is_first, is_last)
 
         self.cuttable = []
         self.avg_time = (0, 0)
@@ -19,7 +19,6 @@ class my_model():
         tf.keras.backend.clear_session()
 
         model = self.pick_model(model_name)
-        model.summary()
 
         if cut_point == 0 and next_cut_point[0] == 0:
             self.model = model
@@ -87,7 +86,7 @@ class my_model():
     def pick_model(self, model_name):
         if 'vgg16' in model_name:
             from tensorflow.keras.applications import VGG16
-            return VGG16(weights="./weights/vgg16.h5")
+            return VGG16(weights="imagenet")
         elif 'multitask' in model_name:
             from models.multitask import multitask
             return multitask

@@ -7,3 +7,4 @@ template
 Dockerfile*
 client.py
 model/
+weights/*

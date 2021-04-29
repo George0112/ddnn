@@ -35,8 +35,8 @@ def uncompress_nparr(bytestring):
     return np.load(io.BytesIO(zlib.decompress(bytestring)))
 
 def init(model_name, cut_point, next_cut_point, is_first=False, is_last=False, output_layer=-1, num_output=1):
+    global model 
     model = my_model(model_name, cut_point=cut_point, next_cut_point=next_cut_point, is_first=is_first, is_last=is_last)
-    
     @app.route('/', methods=['POST', 'GET'])
     def post():
         start = time.time()
@@ -138,6 +138,7 @@ def init(model_name, cut_point, next_cut_point, is_first=False, is_last=False, o
         cut_point = int(request.form['cut_point'])
         next_cut_point = [int(n) for n in request.form['next_cut_point'].split(',')]
         # try:
+        global model
         model = my_model(model_name, cut_point=cut_point, next_cut_point=next_cut_point, is_first=is_first, is_last=is_last)
         # except Exception as e:
             # print(e)
